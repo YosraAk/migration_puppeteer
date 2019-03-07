@@ -29,10 +29,15 @@ module.exports = {
       test('should go to the "Addresses" page', () => client.goToSubtabMenuPage(Menu.Sell.Customers.customers_menu, Menu.Sell.Customers.addresses_submenu));
       test('should click on add new address', () => client.waitForExistAndClick(Addresses.new_address_button));
       test('should set "Email" input', () => client.waitAndSetValue(Addresses.email_input, date_time + addressData.email));
-      test('should set "Identification number" input', () => client.waitAndSetValue(Addresses.id_number_input, addressData.id_number));
+
+      test('should set "Identification number" input', () => {
+        return promise
+          .then(() => client.waitForExistAndClick(Addresses.id_number_input))
+          .then(() => client.waitAndSetValue(Addresses.id_number_input, addressData.id_number));
+      });
       test('should set "Address alias" input', () => client.waitAndSetValue(Addresses.address_alias_input, addressData.address_alias));
-      test('should check that the "First name" is "John"', () => client.checkAttributeValue(Addresses.first_name_input, 'value', addressData.first_name));
-      test('should check that the "Last name" is "Doe"', () => client.checkAttributeValue(Addresses.last_name_input, 'value', addressData.last_name));
+      test('should check that the "First name" is "John"', () => client.checkTextElementValue(Addresses.first_name_input, 'value', addressData.first_name));
+      test('should check that the "Last name" is "Doe"', () => client.checkTextElementValue(Addresses.last_name_input, 'value', addressData.last_name));
       test('should set "Company" input', () => client.waitAndSetValue(Addresses.company, addressData.company));
       test('should set "VAT number" input', () => client.waitAndSetValue(Addresses.VAT_number_input, addressData.vat_number));
       test('should set "Address" input', () => client.waitAndSetValue(Addresses.address_input, addressData.address + " " + date_time));
@@ -42,7 +47,7 @@ module.exports = {
       test('should set "Pays" input', () => client.waitAndSelectByVisibleText(Addresses.country_input, addressData.country));
       test('should set "Home phone" input', () => client.waitAndSetValue(Addresses.phone_input, addressData.home_phone));
       test('should set "Other information" input', () => client.waitAndSetValue(Addresses.other_input, addressData.other));
-      test('should click on "Save" button', () => client.scrollWaitForExistAndClick(Addresses.save_button, 50));
+      test('should click on "Save" button', () => client.waitForExistAndClick(Addresses.save_button, 50));
       test('should verify the appearance of the green validation', () => client.checkTextValue(BO.success_panel, '×\nSuccessful creation.'));
     }, 'customer');
   },
@@ -150,17 +155,15 @@ module.exports = {
           .then(() => client.waitForExistAndClick(Addresses.dropdown_toggle))
           .then(() => client.waitForExistAndClick(Addresses.delete_button));
       });
-      test('should accept the currently displayed alert dialog', () => client.alertAccept());
       test('should verify the appearance of the green validation', () => client.checkTextValue(BO.success_panel, '×\nSuccessful deletion.'));
     }, 'customer');
   },
   deleteAddressWithBulkActions: function (dataAddress) {
     scenario('Delete address with bulk actions', client => {
       test('should go to the "Addresses" page', () => client.goToSubtabMenuPage(Menu.Sell.Customers.customers_menu, Menu.Sell.Customers.addresses_submenu));
-      test('should search for the address in the "Addresses list"', () => {
-        return promise
-          .then(() => client.isVisible(Addresses.filter_by_address_input))
-          .then(() => client.search(Addresses.filter_by_address_input, dataAddress + " " + date_time));
+      test('should search for the address in the "Addresses list"', async () => {
+        await  client.isVisible(Addresses.filter_by_address_input);
+        await client.search(Addresses.filter_by_address_input, dataAddress + " " + date_time);
       });
       test('should select the searched client', () => client.waitForExistAndClick(Addresses.select_address));
       test('should click on the "Bulk actions" button', () => client.waitForExistAndClick(Addresses.bulk_actions_button));

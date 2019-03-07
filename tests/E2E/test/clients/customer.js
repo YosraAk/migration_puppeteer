@@ -2,19 +2,15 @@ let CommonClient = require('./common_client');
 
 class Customer extends CommonClient {
 
-  searchByAddress(addresses, address) {
+  async searchByAddress(addresses, address) {
     if (isVisible) {
-      return this.client
-        .waitAndSetValue(addresses.filter_by_address_input, address)
-        .keys('\uE007')
-        .getText(addresses.address_value.replace('%ID', 5)).then(function (text) {
-          expect(text).to.be.equal("12 rue d'amsterdam" + address);
-        })
+      await this.waitAndSetValue(addresses.filter_by_address_input, address);
+      await page.keyboard.press('Enter');
+      await page.waitFor(addresses.address_value.replace('%ID', 5));
+      await page.$eval(addresses.address_value.replace('%ID', 5), el => el.innerText).then((text) => expect(text.trim).to.equal(("12 rue d'amsterdam" + address).trim));
     } else {
-      return this.client
-        .getText(addresses.address_value.replace('%ID', 4)).then(function (text) {
-          expect(text).to.be.equal("12 rue d'amsterdam" + address);
-        })
+      await page.waitFor(addresses.address_value.replace('%ID', 4));
+      await page.$eval(addresses.address_value.replace('%ID', 4), el => el.innerText).then((text) => expect(text.trim).to.equal(("12 rue d'amsterdam" + address).trim));
     }
   }
 

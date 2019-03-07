@@ -5,14 +5,14 @@
  * [id="PS-65"][Name="delete an address"]
  **/
 
-const {AccessPageBO} = require('../../../../selectors/BO/access_page');
-const {Addresses} = require('../../../../selectors/BO/customers/addresses');
-const {Menu} = require('../../../../selectors/BO/menu.js');
-const common_scenarios = require('../../../common_scenarios/addresses');
-const customer_common_scenarios = require('../../../common_scenarios/customer');
-const {AccessPageFO} = require('../../../../selectors/FO/access_page');
-const {BO} = require('../../../../selectors/BO/customers/index');
-const welcomeScenarios = require('../../../common_scenarios/welcome');
+const {AccessPageBO} = require('../../../selectors/BO/access_page');
+const {Addresses} = require('../../../selectors/BO/customers/addresses');
+const {Menu} = require('../../../selectors/BO/menu.js');
+const common_scenarios = require('../../common_scenarios/addresses');
+const customer_common_scenarios = require('../../common_scenarios/customer');
+const {AccessPageFO} = require('../../../selectors/FO/access_page');
+const {BO} = require('../../../selectors/BO/customers/index');
+const welcomeScenarios = require('../../common_scenarios/welcome');
 
 let promise = Promise.resolve();
 
@@ -40,7 +40,7 @@ let addressData = {
   second_address: 'RDC',
   ZIP: '75009',
   city: 'Paris',
-  country: 'France',
+  country: '8',
   home_phone: '0123456789',
   other: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.'
 };
@@ -57,14 +57,17 @@ let editAddressData = {
   second_address: 'RDC',
   ZIP: '75500',
   city: 'Marseille',
-  country: 'France',
+  country: '8',
   home_phone: '9876543210',
   mobile_phone: '9876543210',
   other: 'azerty'
 };
 
 scenario('Login in the Back Office', client => {
-  test('should open the browser', () => client.open());
+  test('should open the browser', async () => {
+    await client.open();
+    await client.startTracing('Address');
+  });
   test('should login successfully in the Back Office', () => client.signInBO(AccessPageBO));
 }, 'customer');
 welcomeScenarios.findAndCloseWelcomeModal();
@@ -107,25 +110,22 @@ scenario('Edit, delete and delete with bulk actions "Address"', () => {
   scenario('Disable all required field addresses parameter', client => {
     test('should go to the "Addresses" page', () => client.goToSubtabMenuPage(Menu.Sell.Customers.customers_menu, Menu.Sell.Customers.addresses_submenu));
     test('should click on "Set required fields for this section" button', () => client.waitForExistAndClick(Addresses.required_fields_button));
-    test('should disable all fields names', () => {
-      return promise
-        .then(() => client.waitForVisibleAndClick(Addresses.select_all_field_name))
-        .then(() => client.waitForVisibleAndClick(Addresses.select_all_field_name));
+    test('should disable all fields names', async () => {
+      await client.waitForVisibleAndClick(Addresses.select_all_field_name);
+      await client.waitForVisibleAndClick(Addresses.select_all_field_name);
     });
     test('should click on "Save" button', () => client.waitForVisibleAndClick(Addresses.submit_field));
   }, 'customer');
 
   scenario('Delete the second address created', client => {
-    test('should check the address existence in the "addresses list"', () => {
-      return promise
-        .then(() => client.isVisible(Addresses.filter_by_address_input))
-        .then(() => client.search(Addresses.filter_by_address_input, addressData.address + " " + date_time));
+    test('should check the address existence in the "addresses list"', async () => {
+      await client.isVisible(Addresses.filter_by_address_input, 1000);
+      await client.search(Addresses.filter_by_address_input, addressData.address + " " + date_time);
     });
-    test('Should click on "Delete" button of the second address', () => {
-      return promise
-        .then(() => client.waitForVisibleAndClick(Addresses.dropdown_toggle))
-        .then(() => client.waitForVisibleAndClick(Addresses.delete_button))
-        .then(() => client.alertAccept());
+    test('Should click on "Delete" button of the second address', async () => {
+      await client.waitForVisibleAndClick(Addresses.dropdown_toggle);
+      await client.alertAccept();
+      await client.waitForVisibleAndClick(Addresses.delete_button);
     });
     test('should get the address ID', () => client.getTextInVar(Addresses.address_id, 'address_id'));
   }, 'customer');
@@ -134,10 +134,9 @@ scenario('Edit, delete and delete with bulk actions "Address"', () => {
 
 scenario('Edit address', client => {
   scenario('Check customer address in the Front Office', client => {
-    test('should open the Front Office in new window', () => {
-      return promise
-        .then(() => client.waitForExistAndClick(AccessPageBO.shopname))
-        .then(() => client.switchWindow(1));
+    test('should open the Front Office in new window', async () => {
+      await client.waitForExistAndClick(AccessPageBO.shopname);
+      await client.switchWindow(1);
     });
     test('should set the shop language to "English"', () => client.changeLanguage());
     test('should click on "sign in" button', () => client.waitForExistAndClick(AccessPageFO.sign_in_button));
@@ -145,32 +144,29 @@ scenario('Edit address', client => {
     test('should set the "Password" input', () => client.waitAndSetValue(AccessPageFO.password_inputFO, customerData.password));
     test('should click on "Sign In" button', () => client.waitForExistAndClick(AccessPageFO.login_button));
     test('should click on "Addresses" button', () => client.waitForExistAndClick(AccessPageFO.address_information_link));
-    test('should check "Address" information', () => {
-      return promise
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.first_name + " " + addressData.last_name, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.company, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.address + " " + date_time, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.second_address, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.ZIP + " " + addressData.city, "contain"))
-        .then(() => client.switchWindow(0));
+    test('should check "Address" information', async () => {
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.first_name + " " + addressData.last_name, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.company, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.address + " " + date_time, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.second_address, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.ZIP + " " + addressData.city, "contain");
+      await client.switchWindow(0);
     });
     common_scenarios.editAddress(addressData.address, editAddressData);
   }, 'customer');
 
   scenario('Check the edited address in the Back Office', client => {
-    test('should go to the Front Office and refresh the page', () => {
-      return promise
-        .then(() => client.switchWindow(1))
-        .then(() => client.refresh());
+    test('should go to the Front Office and refresh the page', async () => {
+      await client.switchWindow(1);
+      await  client.refresh();
     });
-    test('should check "Address" informations', () => {
-      return promise
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.first_name + " " + editAddressData.last_name, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.company, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.address + " " + date_time, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.second_address, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.ZIP + " " + editAddressData.city, "contain"))
-        .then(() => client.switchWindow(0));
+    test('should check "Address" informations', async () => {
+      await  client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.first_name + " " + editAddressData.last_name, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.company, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.address + " " + date_time, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.second_address, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), editAddressData.ZIP + " " + editAddressData.city, "contain");
+      await  client.switchWindow(0);
     });
   }, 'customer');
 }, 'customer');
@@ -181,15 +177,13 @@ scenario('Delete address', client => {
     test('should Check that no results appear', () => client.isExisting(Addresses.empty_class));
   }, 'customer');
   scenario('Check the deleted address in the Front Office', client => {
-    test('should check that the address has been deleted in the Front Office', () => {
-      return promise
-        .then(() => client.switchWindow(1))
-        .then(() => client.refresh());
+    test('should check that the address has been deleted in the Front Office', async () => {
+      await client.switchWindow(1);
+      await client.refresh();
     });
-    test('should Check that no results appear', () => {
-      return promise
-        .then(() => client.checkTextValue(AccessPageFO.addresses_warning, 'No addresses are available.', "contain"))
-        .then(() => client.switchWindow(0));
+    test('should Check that no results appear', async () => {
+      await client.checkTextValue(AccessPageFO.addresses_warning, 'No addresses are available.', "contain");
+      await client.switchWindow(0);
     });
   }, 'customer');
 }, 'customer');
@@ -203,34 +197,31 @@ scenario('Delete address with bulk actions', client => {
   }, 'customer');
 
   scenario('Check the created address in the Front Office', client => {
-    test('should check that the address has been created in the Front Office', () => {
-      return promise
-        .then(() => client.switchWindow(1))
-        .then(() => client.refresh());
+    test('should check that the address has been created in the Front Office', async () => {
+      await client.switchWindow(1);
+      await client.refresh();
     });
-    test('should check "Address" information', () => {
-      return promise
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.first_name + " " + addressData.last_name, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.company, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.address + " " + date_time, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.second_address, "contain"))
-        .then(() => client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.ZIP + " " + addressData.city, "contain"))
-        .then(() => client.switchWindow(0));
+    test('should check "Address" information', async () => {
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.first_name + " " + addressData.last_name, "contain", 2000);
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.company, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.address + " " + date_time, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.second_address, "contain");
+      await client.checkTextValue(AccessPageFO.address_information.replace('%ID', global.tab['address_id']), addressData.ZIP + " " + addressData.city, "contain");
+      await client.switchWindow(0);
     });
   }, 'customer');
 
   common_scenarios.deleteAddressWithBulkActions(addressData.address);
 
   scenario('Check the deleted address in the Front Office', client => {
-    test('should check that the address has been deleted in the Front Office', () => {
-      return promise
-        .then(() => client.switchWindow(1))
-        .then(() => client.refresh());
+    test('should check that the address has been deleted in the Front Office', async () => {
+      await client.pause(2000);
+      await client.switchWindow(1);
+      await client.refresh();
     });
-    test('should Check that no results appear', () => {
-      return promise
-        .then(() => client.checkTextValue(AccessPageFO.addresses_warning, 'No addresses are available.', "contain"))
-        .then(() => client.switchWindow(0));
+    test('should Check that no results appear', async () => {
+      await client.checkTextValue(AccessPageFO.addresses_warning, 'No addresses are available.', "contain");
+      await client.switchWindow(0);
     });
   }, 'customer');
 }, 'customer');

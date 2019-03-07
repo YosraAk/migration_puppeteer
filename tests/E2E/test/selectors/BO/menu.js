@@ -27,7 +27,7 @@ module.exports = {
         movement_tab: '//*[@id="head_tabs"]//a[text()="Movements"]'
       },
       Customers: {
-        customers_menu: '//*[@id="subtab-AdminParentCustomer"]/a',
+        customers_menu: '#subtab-AdminParentCustomer',
         customers_submenu: '#subtab-AdminCustomers',
         addresses_submenu: '#subtab-AdminAddresses'
       },

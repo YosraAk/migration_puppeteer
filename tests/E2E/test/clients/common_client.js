@@ -36,6 +36,7 @@ class CommonClient {
   }
 
   async close() {
+    await page.close();
     await browser.close();
   }
 
@@ -48,6 +49,7 @@ class CommonClient {
 
   async signInBO(selector, link = global.URL, login = global.adminEmail, password = global.adminPassword) {
     await page.goto(link + '/admin-dev');
+    await page._client.send('Emulation.clearDeviceMetricsOverride');
     await this.waitAndSetValue(selector.login_input, login);
     await this.waitAndSetValue(selector.password_inputBO, password);
     await this.waitForExistAndClick(selector.login_buttonBO);
@@ -222,10 +224,6 @@ class CommonClient {
     await this.refresh();
   }
 
-  async refresh() {
-    await page.reload();
-  }
-
   async localhost(link) {
     await page.goto(link + '/install-dev');
   }
@@ -248,11 +246,6 @@ class CommonClient {
     await page.waitFor(wait);
     await page.waitFor(selector);
     await page.select(selector, value);
-  }
-
-  async signOutBO() {
-    await this.pause(2000);
-    await this.deleteCookie();
   }
 
   async deleteCookie() {
@@ -326,6 +319,54 @@ class CommonClient {
       });
     }
   }
+
+  async switchWindow(id, wait = 0) {
+    await page.waitFor(5000, {waituntil: 'networkidle2'});
+    await page.waitFor(wait);
+    page = await this.getPage(id);
+    await page.bringToFront();
+    await page._client.send('Emulation.clearDeviceMetricsOverride');
+  }
+
+  async waitAndSelectByVisibleText(selector, value, wait = 0) {
+    await page.waitFor(wait);
+    await page.waitFor(selector);
+    await page.select(selector, value);
+  }
+
+  /**
+   * This function searches the data in the table in case a filter input exists
+   * @param selector
+   * @param data
+   *@returns {*}
+   */
+  async search(selector, data) {
+    await this.waitAndSetValue(selector, data);
+    await page.keyboard.press('Enter');
+  }
+
+  async checkExistence(selector, data) {
+    if (global.visible) {
+      await this.waitFor(selector);
+      await page.$eval(selector, el => el.innerText).then((text) => expect(text.trim).to.equal(data.trim));
+    }
+  }
+
+  async checkTextElementValue(selector, textToCheckWith, parameter = 'equal', wait = 0) {
+    switch (parameter) {
+      case "equal":
+        await this.waitFor(wait);
+        await this.waitFor(selector);
+        await page.$eval(selector, el => el.value).then((text) => expect(text).to.equal(textToCheckWith));
+        break;
+      case "contain":
+        await this.waitFor(wait);
+        await this.waitFor(selector);
+        await page.$eval(selector, el => el.value).then((text) => expect(text).to.contain(textToCheckWith));
+        break;
+    }
+  }
+
 }
 
 module.exports = CommonClient;

@@ -83,7 +83,7 @@ module.exports = {
       test('should verify the appearance of the green validation', () => client.checkTextValue(BO.success_panel, '×\nSuccessful update.'));
     }, 'customer');
   },
-  deleteCustomer: function (customerEmail) {
+  deleteCustomer: function (customerEmail, confirmationDialog = false) {
     scenario('Delete customer', client => {
       test('should go to the "Customers" page', () => client.goToSubtabMenuPage(Menu.Sell.Customers.customers_menu, Menu.Sell.Customers.customers_submenu));
       test('should search for the customer email in the "Customers list"', () => {
@@ -91,12 +91,11 @@ module.exports = {
           .then(() => client.isVisible(Customer.customer_filter_by_email_input))
           .then(() => client.search(Customer.customer_filter_by_email_input, date_time + customerEmail));
       });
-      test('should click on "Delete" button', () => {
-        return promise
-          .then(() => client.scrollWaitForExistAndClick(Customer.dropdown_toggle, 50, 2000))
-          .then(() => client.waitForExistAndClick(Customer.delete_button, 1000));
+      test('should click on "Delete" button', async () => {
+        await client.scrollWaitForExistAndClick(Customer.dropdown_toggle, 50, 2000);
+        await client.alertAccept();
+        await client.waitForExistAndClick(Customer.delete_button, 1000);
       });
-      test('should accept the currently displayed alert dialog', () => client.alertAccept());
       test('should choose the option that allows customers to register again with the same email address', () => client.waitForExistAndClick(Customer.delete_first_option));
       test('should click on "Delete" button', () => client.waitForExistAndClick(Customer.delete_confirmation_button));
       test('should verify the appearance of the green validation', () => client.checkTextValue(BO.success_panel, '×\nSuccessful deletion.', 'equal', 2000));
@@ -113,7 +112,6 @@ module.exports = {
       test('should select the searched client', () => client.waitForExistAndClick(Customer.select_customer));
       test('should click on the "Bulk actions" button', () => client.waitForExistAndClick(Customer.bulk_actions_button));
       test('should click on the "Delete selected" button', () => client.waitForExistAndClick(Customer.bulk_actions_delete_button));
-      test('should accept the currently displayed alert dialog', () => client.alertAccept());
       test('should choose the option that allows customers to register again with the same email address', () => client.waitForExistAndClick(Customer.delete_first_option));
       test('should click on "Delete" button', () => client.waitForExistAndClick(Customer.delete_confirmation_button));
       test('should verify the appearance of the green validation', () => client.checkTextValue(BO.success_panel, '×\nThe selection has been successfully deleted.'));

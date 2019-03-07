@@ -44,7 +44,7 @@ module.exports = {
     confirmed_order_message: '//*[@id="content-hook_order_confirmation"]//h3[contains(@class, "card-title")]',
     email_sent_message: '//*[@id="content-hook_order_confirmation"]//p',
     save_notification: '#notifications li',
-    danger_alert: '//*[@id="customer-form"]//li[contains(@class,"alert-danger")]',
+    danger_alert: '#customer-form li[class*=alert-danger]',
     add_new_address: '//*[@id="checkout-addresses-step"]//p[@class="add-address"]/a',
     //---------------------- address management -------------------------//
     address_firstname_input: '.js-address-form input[name=firstname]',
