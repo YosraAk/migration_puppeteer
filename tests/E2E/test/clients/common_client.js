@@ -345,9 +345,9 @@ class CommonClient {
     await this.waitForExistAndClick(selector.logo_home_page);
   }
 
-  async scrollWaitForExistAndClick(selector, pause = 0, timeout = 90000) {
+  async scrollWaitForExistAndClick(selector, pause = 0) {
     await this.scrollTo(selector);
-    await this.waitForExistAndClick(selector, pause, {timeout: timeout})
+    await this.waitForExistAndClick(selector, pause)
   }
 
   async getTextInVar(selector, globalVar, split = false, timeout = 90000) {
@@ -462,16 +462,70 @@ class CommonClient {
       }, selector)
   }
 
-   async checkExistence(selector, data, pos) {
-     if (global.isVisible) {
-       await page.waitFor(selector.replace('%ID', pos));
-       await page.$eval(selector.replace('%ID', pos), el => el.innerText).then((text) => expect(text.trim).to.equal(data.trim));
-     }
-     else {
-       await page.waitFor(selector.replace('%ID', pos-1));
-       await page.$eval(selector.replace('%ID', pos - 1), el => el.innerText).then((text) => expect(text.trim).to.equal(data.trim));
-     }
-   }
+  async checkExistence(selector, data, pos) {
+    if (global.isVisible) {
+      await page.waitFor(selector.replace('%ID', pos));
+      await page.$eval(selector.replace('%ID', pos), el => el.innerText).then((text) => expect(text.trim).to.equal(data.trim));
+    }
+    else {
+      await page.waitFor(selector.replace('%ID', pos - 1));
+      await page.$eval(selector.replace('%ID', pos - 1), el => el.innerText).then((text) => expect(text.trim).to.equal(data.trim));
+    }
+  }
+
+  async closeWindow() {
+    await page.close();
+  }
+
+  async changeOrderState(selector, state) {
+    await page.waitFor(selector.order_state_select);
+    await page.evaluate(() => {
+      let element = document.querySelector('#id_order_state');
+      element.style = "";
+    });
+    await this.waitAndSelectByVisibleText(selector.order_state_select, state);
+    await this.waitForExistAndClick(selector.update_status_button);
+  }
+
+  async setDownloadBehavior() {
+    await page.waitFor(4000);
+    await page._client.send('Page.setDownloadBehavior', {
+      behavior: 'allow',
+      downloadPath: global.downloadsFolderPath
+    });
+  }
+
+  async getCustomDate(numberOfDay) {
+    let today = await new Date();
+    await today.setDate(today.getDate() + numberOfDay);
+    let dd = await today.getDate();
+    let mm = await today.getMonth() + 1; //January is 0!
+    let yyyy = await today.getFullYear();
+    if (dd < 10) {
+      dd = await '0' + dd;
+    }
+    if (mm < 10) {
+      mm = await '0' + mm;
+    }
+    return await yyyy + '-' + mm + '-' + dd;
+  }
+
+  async checkDocument(folderPath, fileName, text) {
+    await pdfUtil.pdfToText(folderPath + fileName + '.pdf', function (err, data) {
+      global.indexText = data.indexOf(text);
+      global.data = global.data + data;
+    });
+    await page.waitFor(2000);
+    expect(global.indexText, text + "does not exist in the PDF document").to.not.equal(-1);
+  }
+
+  async checkFile(folderPath, fileName, wait = 0) {
+    await fs.stat(folderPath + fileName, function (err, stats) {
+      err === null && stats.isFile() ? global.existingFile = true : global.existingFile = false;
+    });
+    await page.waitFor(wait);
+    await expect(global.existingFile).to.be.true;
+  }
 }
 
 module.exports = CommonClient;

@@ -10,7 +10,10 @@ const {Menu} = require('../../../selectors/BO/menu.js');
 require('./10_check_credit_slip');
 scenario('Generate and check a Credit slips options ', () => {
   scenario('Open the browser and login successfully in the Back Office ', client => {
-    test('should open the browser', () => client.open());
+    test('should open the browser', async () => {
+      await client.open();
+      await client.startTracing('Order');
+    });
     test('should login successfully in the Back Office', () => client.signInBO(AccessPageBO));
   }, 'common_client');
   scenario('Change the credit slip prefix ', client => {
